@@ -43,6 +43,132 @@ require_once(dirname(dirname(__FILE__)) . '/wp-includes/wp-db.php');
 
 $step = isset( $_GET['step'] ) ? (int) $_GET['step'] : 0;
 
+/** Plugins to activate upon installation */
+$default_plugins = array(
+		'backwpup/backwpup.php',
+		'better-wp-security/better-wp-security.php',
+		'disable-pointers/disable-pointers.php',
+		'wordpress-firewall-2/wordpress-firewall-2.php',
+		'wordpress-importer/wordpress-importer.php'
+		);
+
+/**
+ * {@internal Missing Short Description}}
+ *
+ * {@internal Missing Long Description}}
+ *
+ * @since 2.1.0
+ *
+ * @param int $user_id User ID.
+ */
+function wp_install_defaults($user_id) {
+	global $wpdb, $wp_rewrite, $current_site, $table_prefix;
+
+	// Default category
+	$cat_name = __('News');
+	/* translators: Default category slug */
+	$cat_slug = sanitize_title(_x('News', 'Default category slug'));
+
+	if ( global_terms_enabled() ) {
+		$cat_id = $wpdb->get_var( $wpdb->prepare( "SELECT cat_ID FROM {$wpdb->sitecategories} WHERE category_nicename = %s", $cat_slug ) );
+		if ( $cat_id == null ) {
+			$wpdb->insert( $wpdb->sitecategories, array('cat_ID' => 0, 'cat_name' => $cat_name, 'category_nicename' => $cat_slug, 'last_updated' => current_time('mysql', true)) );
+			$cat_id = $wpdb->insert_id;
+		}
+		update_option('default_category', $cat_id);
+	} else {
+		$cat_id = 1;
+	}
+
+	$wpdb->insert( $wpdb->terms, array('term_id' => $cat_id, 'name' => $cat_name, 'slug' => $cat_slug, 'term_group' => 0) );
+	$wpdb->insert( $wpdb->term_taxonomy, array('term_id' => $cat_id, 'taxonomy' => 'category', 'description' => '', 'parent' => 0, 'count' => 1));
+	$cat_tt_id = $wpdb->insert_id;
+
+	// Default link category
+	$cat_name = __('Blogroll');
+	/* translators: Default link category slug */
+	$cat_slug = sanitize_title(_x('Blogroll', 'Default link category slug'));
+
+	if ( global_terms_enabled() ) {
+		$blogroll_id = $wpdb->get_var( $wpdb->prepare( "SELECT cat_ID FROM {$wpdb->sitecategories} WHERE category_nicename = %s", $cat_slug ) );
+		if ( $blogroll_id == null ) {
+			$wpdb->insert( $wpdb->sitecategories, array('cat_ID' => 0, 'cat_name' => $cat_name, 'category_nicename' => $cat_slug, 'last_updated' => current_time('mysql', true)) );
+			$blogroll_id = $wpdb->insert_id;
+		}
+		update_option('default_link_category', $blogroll_id);
+	} else {
+		$blogroll_id = 2;
+	}
+
+	$wpdb->insert( $wpdb->terms, array('term_id' => $blogroll_id, 'name' => $cat_name, 'slug' => $cat_slug, 'term_group' => 0) );
+	$wpdb->insert( $wpdb->term_taxonomy, array('term_id' => $blogroll_id, 'taxonomy' => 'link_category', 'description' => '', 'parent' => 0, 'count' => 7));
+	$blogroll_tt_id = $wpdb->insert_id;
+
+	if ( ! is_multisite() )
+		update_user_meta( $user_id, 'show_welcome_panel', 0 );
+	elseif ( ! is_super_admin( $user_id ) && ! metadata_exists( 'user', $user_id, 'show_welcome_panel' ) )
+	update_user_meta( $user_id, 'show_welcome_panel', 0 );
+
+	if ( is_multisite() ) {
+		// Flush rules to pick up the new page.
+		$wp_rewrite->init();
+		$wp_rewrite->flush_rules();
+
+		$user = new WP_User($user_id);
+		$wpdb->update( $wpdb->options, array('option_value' => $user->user_email), array('option_name' => 'admin_email') );
+
+		// Remove all perms except for the login user.
+		$wpdb->query( $wpdb->prepare("DELETE FROM $wpdb->usermeta WHERE user_id != %d AND meta_key = %s", $user_id, $table_prefix.'user_level') );
+		$wpdb->query( $wpdb->prepare("DELETE FROM $wpdb->usermeta WHERE user_id != %d AND meta_key = %s", $user_id, $table_prefix.'capabilities') );
+
+		// Delete any caps that snuck into the previously active blog. (Hardcoded to blog 1 for now.) TODO: Get previous_blog_id.
+		if ( !is_super_admin( $user_id ) && $user_id != 1 )
+			$wpdb->delete( $wpdb->usermeta, array( 'user_id' => $user_id , 'meta_key' => $wpdb->base_prefix.'1_capabilities' ) );
+	}
+}
+
+/**
+ * {@internal Missing Short Description}}
+ *
+ * {@internal Missing Long Description}}
+ *
+ * @since 2.1.0
+ *
+ * @param string $blog_title Blog title.
+ * @param string $blog_url Blog url.
+ * @param int $user_id User ID.
+ * @param string $password User's Password.
+ */
+function wp_new_blog_notification($blog_title, $blog_url, $user_id, $password) {
+	// do nothing, I don't want install notifications!
+}
+
+/**
+ * Activate Default Plugins
+ * 
+ * After installation, this function activates the default plugins we want, saving us some time
+ * 
+ * @param string $plugin Plugin, e.g akismet/akismet.php
+ * 
+ * @author Philip John
+ */
+function run_activate_plugin( $plugin ) {
+	$current = get_option( 'active_plugins' );
+	$plugin = plugin_basename( trim( $plugin ) );
+		
+	if ( !in_array( $plugin, $current ) ) {
+		$current[] = $plugin;
+		sort( $current );
+		do_action( 'activate_plugin', trim( $plugin ) );
+		update_option( 'active_plugins', $current );
+		do_action( 'activate_' . trim( $plugin ) );
+		do_action( 'activated_plugin', trim( $plugin) );
+	}
+		
+	return null;
+}
+
+
 /**
  * Display install header.
  *
@@ -220,6 +346,7 @@ switch($step) {
 			$wpdb->show_errors();
 			$result = wp_install($weblog_title, $user_name, $admin_email, $public, '', $admin_password);
 			extract( $result, EXTR_SKIP );
+			
 ?>
 
 <h1><?php _e( 'Success!' ); ?></h1>
@@ -245,7 +372,11 @@ switch($step) {
 
 <?php
 		}
-		break;
+		// Now activate our default plugins
+		foreach ($default_plugins as $plugin){
+			run_activate_plugin($plugin);
+		}
+	break;
 }
 ?>
 <script type="text/javascript">var t = document.getElementById('weblog_title'); if (t){ t.focus(); }</script>

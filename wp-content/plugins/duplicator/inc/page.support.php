@@ -28,12 +28,12 @@
 			<?php  _e('For a complete rundown of the Duplicator see the online knowledgebase by clicking the question button or any link below.   If you experience issues with creating or installing a package check out the FAQ page first.', 'wpduplicator');?>
 		</div>
 		
-		<div style="width:100%; padding:10px 10px 0px 10px; font-size:16px; font-weight:bold" align="center">
+		<div style="width:100%;font-size:14px; padding-left:10px; font-weight:bold; text-align:center; line-height:26px;" >
 			<a href="http://lifeinthegrid.com/duplicator-quick" target="_blank"><?php _e('Quick Start', 'wpduplicator') ?></a> &nbsp; | &nbsp;
 			<a href="http://lifeinthegrid.com/duplicator-guide" target="_blank"><?php _e('User Guide', 'wpduplicator') ?></a> &nbsp; | &nbsp; 
-			<a href="http://lifeinthegrid.com/duplicator-faq" target="_blank"><?php _e('FAQs', 'wpduplicator') ?></a> &nbsp; | &nbsp; 
+			<a href="http://lifeinthegrid.com/duplicator-faq" target="_blank"><?php _e('FAQs', 'wpduplicator') ?></a>   &nbsp; | &nbsp; 
 			<a href="http://lifeinthegrid.com/duplicator-log" target="_blank"><?php _e('Changelog', 'wpduplicator') ?></a> &nbsp; | &nbsp; 
-			<a href="http://lifeinthegrid.com/labs/duplicator" target="_blank">Product Page</a>
+			<a href="http://lifeinthegrid.com/labs/duplicator" target="_blank"><?php _e('Product Page', 'wpduplicator') ?></a>
 		</div>		
 		<div style="clear:both; height:35px"></div>
 
@@ -74,7 +74,7 @@
 			?>
 			<i>
 				<?php 
-					_e("Most issues that occur with the Duplicator revolve around how a server is configured.  In order to diagnose your issues we will require temporary admin accounts to your cPanel and WordPress Admin.  Please fill out the "); 
+					_e("Most issues that occur with the Duplicator revolve around how a server is configured.  In order to diagnose your issues we will require temporary admin accounts to your cPanel and WordPress Admin.  Please fill out the ", 'wpduplicator'); 
 					printf(" <a href='http://lifeinthegrid.com/services' target='_blank'>%s</a> %s",
 						__("Request Quote", 'wpduplicator'),
 						__("form and explain your issue in detail.", 'wpduplicator')); 	
