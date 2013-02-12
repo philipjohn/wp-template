@@ -579,7 +579,7 @@ if ( ! class_exists( 'bwps_admin_common' ) ) {
 				if ( $bwpsserver == 'apache' || $bwpsserver == 'litespeed' ) {
 				
 					$rules .= "RewriteCond %{QUERY_STRING} \.\.\/ [NC,OR]" . PHP_EOL .
-						"RewriteCond %{QUERY_STRING} ^.*(bash|git|hg|log|svn|swp|cvs) [NC,OR]" . PHP_EOL .
+						"RewriteCond %{QUERY_STRING} ^.*\.(bash|git|hg|log|svn|swp|cvs) [NC,OR]" . PHP_EOL .
 						"RewriteCond %{QUERY_STRING} etc/passwd [NC,OR]" . PHP_EOL .
 						"RewriteCond %{QUERY_STRING} boot\.ini [NC,OR]" . PHP_EOL .
 						"RewriteCond %{QUERY_STRING} ftp\:  [NC,OR]" . PHP_EOL .
@@ -605,7 +605,7 @@ if ( ! class_exists( 'bwps_admin_common' ) ) {
 					$rules .= 
 					
 						"\tif (\$args ~* \"\\.\\./\") { set \$susquery 1; }" . PHP_EOL .
-						"\tif (\$args ~* \"(bash|git|hg|log|svn|swp|cvs)\") { set \$susquery 1; }" .PHP_EOL .
+						"\tif (\$args ~* \".(bash|git|hg|log|svn|swp|cvs)\") { set \$susquery 1; }" .PHP_EOL .
 						"\tif (\$args ~* \"etc/passwd\") { set \$susquery 1; }" . PHP_EOL .
 						"\tif (\$args ~* \"boot.ini\") { set \$susquery 1; }" . PHP_EOL .
 						"\tif (\$args ~* \"ftp:\") { set \$susquery 1; }" . PHP_EOL .
@@ -831,6 +831,49 @@ if ( ! class_exists( 'bwps_admin_common' ) ) {
 			
 			return $pass;	
 			
+		}
+
+		/**
+		 * Download the 404 log in .csv format
+		 * 
+		 **/
+		function log404csv() {
+
+			global $wpdb;
+
+			@header( 'Content-type: text/x-csv' );
+			@header( 'Content-Transfer-Encoding: binary' );
+			@header( 'Content-Disposition: attachment; filename=404errors.csv' );
+			@header( 'Cache-Control: no-cache, must-revalidate' ); 
+			@header( 'Expires: Thu, 22 Jun 1978 00:28:00 GMT' );
+
+			@ini_set( 'auto_detect_line_endings', true );
+
+			$headers = array(
+				'url',
+				'time',
+				'host',
+				'referrer'
+			);
+
+			$errors = $wpdb->get_results( "SELECT url, timestamp, host, referrer, url FROM `" . $wpdb->base_prefix . "bwps_log` WHERE `type` = 2;", ARRAY_A );
+
+			array_unshift( $errors, $headers );
+
+			foreach ( $errors as $error ) {
+
+				foreach ( $error as $attr ) {
+
+					echo $attr . ',';
+
+				}
+
+				echo PHP_EOL;
+
+			}
+			
+			exit;
+
 		}
 				
 		/**

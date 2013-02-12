@@ -868,13 +868,13 @@ if ( ! class_exists( 'bwps_admin_content' ) ) {
 		 *
 		 **/
 		function dashboard_content_7() {
-			global $wpdb, $bwpsoptions, $bwpsdata;
+			global $bwps, $wpdb, $bwpsoptions, $bwpsdata;
 			?>
 			<ul>
 				<li>
 					<h4><?php _e( 'User Information', $this->hook ); ?></h4>
 					<ul>
-						<li><?php _e( 'Public IP Address', $this->hook ); ?>: <strong><a target="_blank" title="<?php _e( 'Get more information on this address', $this->hook ); ?>" href="http://whois.domaintools.com/<?php echo $_SERVER['REMOTE_ADDR']; ?>"><?php echo $_SERVER['REMOTE_ADDR']; ?></a></strong></li>
+						<li><?php _e( 'Public IP Address', $this->hook ); ?>: <strong><a target="_blank" title="<?php _e( 'Get more information on this address', $this->hook ); ?>" href="http://whois.domaintools.com/<?php echo $bwps->getIp(); ?>"><?php echo $bwps->getIp(); ?></a></strong></li>
 						<li><?php _e( 'User Agent', $this->hook ); ?>: <strong><?php echo filter_var( $_SERVER['HTTP_USER_AGENT'], FILTER_SANITIZE_STRING ); ?></strong></li>
 					</ul>
 				</li>
@@ -2325,11 +2325,17 @@ if ( ! class_exists( 'bwps_admin_content' ) ) {
 		 *
 		 **/
 		function logs_content_4() {
-			global $wpdb;
+			global $wpdb, $bwps;
 			
 			$log_content_4_table = new log_content_4_table();
 			$log_content_4_table->prepare_items();
 			$log_content_4_table->display();
+
+			?>
+
+				<p><a href="<?php echo admin_url(); ?><?php echo is_multisite() ? 'network/' : ''; ?>admin.php?page=better-wp-security-logs&bit51_404_csv" target="_blank" ><?php _e( 'Download 404 Log in .csv format', $this->hook ); ?></a></p>
+
+			<?php
 			
 		}
 		
@@ -2379,7 +2385,7 @@ if ( ! class_exists( 'bwps_admin_content' ) ) {
 				unset( $logout );		
 				?>
 				
-				<p><a href="<?php echo admin_url(); ?><?php echo is_multisite() ? 'network/' : ''; ?>admin.php?page=better-wp-security-logs#file-change"><?php _e( 'Return to Log', $this->hook ); ?></a></p>
+				<p><a href="<?php echo admin_url(); ?><?php echo is_multisite() ? 'network/' : ''; ?>admin.php?page=better-wp-security-logs#file-change" ><?php _e( 'Return to Log', $this->hook ); ?></a></p>
 				
 			<?php			
 			} else {
