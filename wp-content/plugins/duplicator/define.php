@@ -2,14 +2,11 @@
 	
 	//Prevent directly browsing to the file
 	if (function_exists('plugin_dir_url')) {
-		define('DUPLICATOR_VERSION',   		'0.4.0');
+		define('DUPLICATOR_VERSION',   		'0.4.2');
 		define("DUPLICATOR_HOMEPAGE",		"http://lifeinthegrid.com/labs/duplicator");
 		define("DUPLICATOR_GIVELINK",		"http://lifeinthegrid.com/partner");
 		define("DUPLICATOR_HELPLINK",  		"http://lifeinthegrid.com/duplicator-docs");
 		define("DUPLICATOR_CERTIFIED",		"http://lifeinthegrid.com/duplicator-hosts");
-		
-		define("DUPLICATOR_DB_ICONV_IN",	"UTF-8"); 
-		define("DUPLICATOR_DB_ICONV_OUT",	"ISO-8859-1//TRANSLIT"); 
 		define('DUPLICATOR_PLUGIN_URL',  plugin_dir_url( __FILE__ ));
 		define('DUPLICATOR_PLUGIN_PATH', str_replace("\\", "/", plugin_dir_path( __FILE__ )));
 		
@@ -27,7 +24,12 @@
 		define("DUPLICATOR_INSTALL_BAK",	'installer.rescue.php');
 		define("DUPLICATOR_INSTALL_SQL",	'installer-data.sql');
 		define("DUPLICATOR_INSTALL_LOG",	'installer-log.txt');
-		define("DUPLICATOR_ZIP_FILE_POOL",	5000);
+		define("DUPLICATOR_ZIP_FILE_POOL",	 5000);
+		define("DUPLICATOR_PHP_MAX_TIME",	 5000);
+		define("DUPLICATOR_PHP_MAX_MEMORY",	'5000M');
+		define("DUPLICATOR_DB_MAX_TIME",	 5000);
+		
+		$GLOBALS['DUPLICATOR_SEPERATOR1']	= str_repeat("********", 5);
 	} else {
 		error_reporting(0); 
 		$port = (!empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] != "off") ? "https://" : "http://"; 

@@ -1,4 +1,4 @@
- <?php
+<?php
 	/** WordPress Administration Bootstrap 
 	see: http://codex.wordpress.org/Roles_and_Capabilities#export
 	Must be logged in from the WordPress Admin */
@@ -62,7 +62,7 @@
 		echo $html;
 	 ?>
 	 
-	 <br/><i>If the installer files where not successfully removed, then you WILL need to remove them manually. <br/>
+	 <br/><i>If the installer files did not successfully get removed, then you WILL need to remove them manually. <br/>
 	Please remove all installer files or else you will leave a security hole on your server.</i>
 	 
 	 </div>

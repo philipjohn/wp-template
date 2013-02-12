@@ -9,101 +9,72 @@ function duplicator_create_dbscript($destination) {
 	try {
 
 		global $wpdb;
-		//$dbiconv = ($GLOBALS['duplicator_opts']['dbiconv'] == "0" && function_exists("iconv")) ? false : true;
-		
 		$handle  = fopen($destination,'w+');
 		$tables  = $wpdb->get_col('SHOW TABLES');
-		
 		duplicator_log("log:fun__create_dbscript=>started");
-		//if ($dbiconv) {
-			//duplicator_log("log:fun__create_dbscript=>dbiconv enabled");
-		//}
 		
+		$sql_header  =  "/* DUPLICATOR MYSQL SCRIPT CREATED ON : " . @date("F j, Y, g:i a") . " */\n\n";
+		$sql_header .=  "SET FOREIGN_KEY_CHECKS = 0;\n\n";
+		@fwrite($handle, $sql_header);
+		
+		//BUILD CREATES:
+		//All creates must be created before inserts do to foreign key constraints
 		foreach ($tables as $table) {
-		
-			//Generate Drop Statement
 			//$sql_del = ($GLOBALS['duplicator_opts']['dbadd_drop']) ? "DROP TABLE IF EXISTS {$table};\n\n" : "";
 			//@fwrite($handle, $sql_del);
-			
-			//Generate Create Statement
-			$row_count  = $wpdb->get_var("SELECT Count(*) FROM `{$table}`");
-			duplicator_log("start: {$table} ({$row_count})");	
-		
 			$create  = $wpdb->get_row("SHOW CREATE TABLE `{$table}`", ARRAY_N);
-			$sql_crt = "{$create[1]};\n\n";
-			@fwrite($handle, $sql_crt);
-			
+			@fwrite($handle, "{$create[1]};\n\n");
+		}		
+		
+		//BUILD INSERTS: 
+		//Create Insert in 100 row increments to better handle memory
+		foreach ($tables as $table) {
+					
+			$row_count  = $wpdb->get_var("SELECT Count(*) FROM `{$table}`");
+			duplicator_log("{$table} ({$row_count})");	
+		
 			if ($row_count > 100) {
 				$row_count = ceil($row_count / 100);
 			} else if ($row_count > 0) {
 				$row_count = 1;  
+			} 
+			
+			if ($row_count >= 1) {
+				@fwrite($handle, "\n/* INSERT TABLE DATA: {$table} */\n");
 			}
-			
-			//PERFORM ICONV ROUTINE
-			//Chunck the query results to avoid memory issues
-			/*if ($dbiconv) {
-			
-				for ($i = 0; $i < $row_count; $i++) {
-					$sql   = "";
-					$limit = $i * 100;
-					$query = "SELECT * FROM `{$table}` LIMIT {$limit}, 100";
-					$rows  = $wpdb->get_results($query, ARRAY_A);
-					if (is_array($rows)) {
-						foreach ($rows as $row) {
-							$sql .= "INSERT INTO `{$table}` VALUES(";
-							$num_values  = count($row);
-							$num_counter = 1;
-							foreach ($row as $value) {
-								$value = @iconv(DUPLICATOR_DB_ICONV_IN, DUPLICATOR_DB_ICONV_OUT, $value);
-								($num_values == $num_counter) 
-									? $sql .= '"' . @mysql_real_escape_string($value) . '"'
-									: $sql .= '"' . @mysql_real_escape_string($value) . '", ';
-								$num_counter++;
-							}
-							$sql .= ");\n";
-						}
-						@fwrite($handle, $sql);
-						duplicator_fcgi_flush();
-					}
-				}
-				
-			//DO NOT PERFORM ICONV
-			} else {*/
 
-				for ($i = 0; $i < $row_count; $i++) {
-					$sql   = "";
-					$limit = $i * 100;
-					$query = "SELECT * FROM `{$table}` LIMIT {$limit}, 100";
-					$rows  = $wpdb->get_results($query, ARRAY_A);
-					if (is_array($rows)) {
-						foreach ($rows as $row) {
-							$sql .= "INSERT INTO `{$table}` VALUES(";
-							$num_values  = count($row);
-							$num_counter = 1;
-							foreach ($row as $value) {
-								($num_values == $num_counter) 
-									? $sql .= '"' . @mysql_real_escape_string($value) . '"'
-									: $sql .= '"' . @mysql_real_escape_string($value) . '", ';
-								$num_counter++;
-							}
-							$sql .= ");\n";
+			for ($i = 0; $i < $row_count; $i++) {
+				$sql   = "";
+				$limit = $i * 100;
+				$query = "SELECT * FROM `{$table}` LIMIT {$limit}, 100";
+				$rows  = $wpdb->get_results($query, ARRAY_A);
+				if (is_array($rows)) {
+					foreach ($rows as $row) {
+						$sql .= "INSERT INTO `{$table}` VALUES(";
+						$num_values  = count($row);
+						$num_counter = 1;
+						foreach ($row as $value) {
+							($num_values == $num_counter) 
+								? $sql .= '"' . @mysql_real_escape_string($value) . '"'
+								: $sql .= '"' . @mysql_real_escape_string($value) . '", ';
+							$num_counter++;
 						}
-						@fwrite($handle, $sql);
-						duplicator_fcgi_flush();
+						$sql .= ");\n";
 					}
+					@fwrite($handle, $sql);
+					duplicator_fcgi_flush();
 				}
-			
-			//}
-			
-			@fwrite($handle, "\n\n");
-			duplicator_log("done:  {$table}");
-		}		
-	
+			}
+		}	
+		
+		$sql_footer =  "\nSET FOREIGN_KEY_CHECKS = 1;";
+		@fwrite($handle, $sql_footer);
+		
 		duplicator_log("log:fun__create_dbscript=>sql file written to {$destination}");
 		fclose($handle);
 		$wpdb->flush();
 		duplicator_log("log:fun__create_dbscript=>ended");
-	
+		
 	} catch(Exception $e) {
 		duplicator_log("log:fun__create_dbscript=>runtime error: " . $e);
 	}
@@ -184,7 +155,7 @@ function duplicator_create_installerFile($uniquename) {
 		"fwrite_dbname" 			=> $duplicator_opts['dbname'],
 		"fwrite_dbuser" 			=> $duplicator_opts['dbuser'],
 		"fwrite_wp_tableprefix" 	=> $wpdb->prefix,
-		"fwrite_blogname"			=> get_option('blogname'),
+		"fwrite_blogname"			=> @addslashes(get_option('blogname')),
 		"fwrite_wproot"			    => DUPLICATOR_WPROOTPATH,
 		"fwrite_rescue_flag"		=> "");
 		
@@ -310,7 +281,7 @@ function duplicator_dirInfo($directory) {
 				} 
 			} 
 		} 
-		closedir($handle); 
+		@closedir($handle); 
 		$total['size']    = $size; 
 		$total['count']   = $count; 
 		$total['folders'] = $folders; 
@@ -411,8 +382,7 @@ function duplicator_snapshot_urlpath() {
  *  @param string $msg		The message to log
  */
 function duplicator_log($msg, $level = 0) {
-	$stamp = date('h:i:s');
-	@fwrite($GLOBALS['duplicator_package_log_handle'], "{$stamp} {$msg} \n");
+	@fwrite($GLOBALS['duplicator_package_log_handle'], "{$msg} \n");
 }
 
 ?>

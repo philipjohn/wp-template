@@ -116,7 +116,7 @@
 		});
 		
 		$("#dup-step1-dialog-db").dialog({
-			height:400, width:500, modal: true,
+			height:400, width:550, modal: true,
 			position:['center', 150],
 			buttons: {Close: function() {$(this).dialog( "close" );}}
 		});
@@ -308,7 +308,7 @@ DIALOG: SERVER CHECKS  -->
 					<?php 
 						echo "<i>Path: {$GLOBALS['CURRENT_ROOT_PATH']} </i><br/>";
 						printf("<b>[%s]</b> %s <br/>", $req01a, "Is Writable");
-						printf("<b>[%s]</b> %s <br/>", $req01b, "Contains only one Zip file. <div style='padding-left:55px'>Result = {$zip_file_name}</div>");
+						printf("<b>[%s]</b> %s <br/>", $req01b, "Contains only one zip file.<div style='padding-left:55px'>Result = {$zip_file_name} <br/> <i>Manual extraction still requires zip file</i> </div> ");
 					?>
 				</td>
 			</tr>
@@ -383,8 +383,17 @@ DIALOG: SERVER CHECKS  -->
 DIALOG: DB CONNECTION CHECK  -->
 <div id="dup-step1-dialog-db" title="Test Database Connection" style="display:none">
 	<div id="dup-step1-dialog-db-data" style="padding: 0px 10px 10px 10px;">		
-		<div id="dbconn-test-msg"></div>
+		<div id="dbconn-test-msg" style="min-height:50px"></div>
+		<br/><hr size="1" />
+		<div class="help">
+		<b>Common Connection Issues:</b><br/>
+		- Double check case sensitive values 'User', 'Password' &amp; the 'Database Name' <br/>
+		- Validate the database and database user exist on this server <br/>
+		- Check if the database user has the correct permission levels to this database <br/>
+		- The host 'localhost' may not work on all hosting providers <br/>
+		- Contact your hosting provider for the exact required parameters <br/>
+		- See the 'Database Setup Help' section on step 1 for more details<br/>
+		- Visit the online resources 'Common FAQ page' <br/>
+		</div>
 	</div>
 </div>
-		
-

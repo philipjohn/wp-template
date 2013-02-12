@@ -93,7 +93,6 @@ jQuery.noConflict()(function($) {
 	Duplicator.saveSettings = function() {
 		var q;
 		var email_me   		= $('#email-me').is(':checked') ? 1 : 0;
-		var dbiconv    		= $('#dbiconv').is(':checked')  ? 1 : 0;
 		var log_level  		= $("select#log_level").val() ? $("select#log_level").val() : 0;
 		var email_others	= $("input#email_others").val();
 		var dir_bypass 		= $("textarea#dir_bypass").val();
@@ -117,13 +116,10 @@ jQuery.noConflict()(function($) {
 				'dbname'  		: $("input#dbname").val(),
 				'dbuser'  		: $("input#dbuser").val(),
 				'url_new'  		: $("input#url_new").val(),
-				'dbiconv'  		: dbiconv,
 				'email-me'  	: email_me,
 				'email_others'  : email_others,
-				'max_time'  	: $("input#max_time").val(),
-				'max_memory'  	: $("input#max_memory").val(),
-				'skip_ext'  	: $("input#skip_ext").val(),
-				'dir_bypass'  	: $("textarea#dir_bypass").val(),
+				'skip_ext'  	: $("#skip_ext").val(),
+				'dir_bypass'  	: $("#dir_bypass").val(),
 				'log_level'  	: log_level,
 				'rm_snapshot'  	: rm_snapshot
 			},
@@ -305,12 +301,14 @@ jQuery.noConflict()(function($) {
 	}
 	Duplicator.optionsOpen  = function() {$("div#dialog-options").dialog("open");}
 	Duplicator.optionsClose = function() {$('div#dialog-options').dialog('close');}
-	Duplicator.optionsAddRootPath = function(obj) {
-		var path = $(obj).text();
+	Duplicator.optionsAddExcludePath = function(path) {
 		var text = $("#dir_bypass").val() + path + ';';
 		$("#dir_bypass").val(text);
 	}
-	
+	Duplicator.optionsAddExcludeExts = function(path) {
+		var text = $("#skip_ext").val() + path + ';';
+		$("#skip_ext").val(text);
+	}
 
 
 	/*  ============================================================================

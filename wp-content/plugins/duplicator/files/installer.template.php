@@ -32,7 +32,7 @@ if ( isset($_GET['get']) && file_exists($_GET['file'])) {
 		header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
 		header('Pragma: public');
 		header('Content-Length: ' . filesize($_GET['file']));
-		ob_clean();
+		@ob_clean();
 		@flush();
 		if (@readfile($_GET['file']) == false) {
 			$data = file_get_contents($_GET['file']);
@@ -94,16 +94,16 @@ $GLOBALS['FW_RESCUE_FLAG'] 	= '%fwrite_rescue_flag%';
 $GLOBALS['FW_WPROOT'] 		= '%fwrite_wproot%';
 
 //DATABASE SETUP: all time in seconds	
-$GLOBALS['DB_MAX_TIME']    = 4000;
+$GLOBALS['DB_MAX_TIME']    = 5000;
 $GLOBALS['DB_MAX_PACKETS'] = 268435456;
-ini_set('mysql.connect_timeout', '4000');
+ini_set('mysql.connect_timeout', '5000');
 
 //PHP SETUP: all time in seconds
-ini_set('memory_limit',		  '2048M');
+ini_set('memory_limit',		  '5000M');
 ini_set("max_execution_time", '5000'); 
 ini_set("max_input_time",	  '5000');
 ini_set('default_socket_timeout', '5000');
-set_time_limit(0);
+@set_time_limit(0);
 
 $GLOBALS['DBCHARSET_DEFAULT'] = 'utf8';
 $GLOBALS['DBCOLLATE_DEFAULT'] = 'utf8_general_ci';
@@ -121,7 +121,7 @@ END ADVANCED FEATURES: Do not edit below here.
 define("DUPLICATOR_SSDIR_NAME", 	'wp-snapshots');  //This should match DUPLICATOR_SSDIR_NAME in duplicator.php
 
 //GLOBALS
-$GLOBALS['DUPLICATOR_INSTALLER_VERSION'] =  '0.4.0';
+$GLOBALS['DUPLICATOR_INSTALLER_VERSION'] =  '0.4.2';
 $GLOBALS["SQL_FILE_NAME"] 	= "installer-data.sql";
 $GLOBALS["LOG_FILE_NAME"] 	= "installer-log.txt";
 $GLOBALS['SEPERATOR1']		= str_repeat("********", 10);
@@ -565,13 +565,13 @@ class DupUtil {
 		DupUtil::log("\n-package extraction is in manual mode-\n");
 	} else {
 		if ($GLOBALS['FW_PACKAGE_NAME'] != $_POST['package_name']) {
-			DupUtil::log("WARNING: This Package Set may be incompatible!  \nBelow is a summary of the package this installer was built with and the package used. To guarantee accuracy make sure the installer and package match. For more details see the online FAQs.  \ncreated with:   {$GLOBALS['FW_PACKAGE_NAME']}  \nprocessed with: {$_POST['package_name']}  \n");
+			DupUtil::log("WARNING: This Package Set may be incompatible!  \nBelow is a summary of the package this installer was built with and the package used. \nTo guarantee accuracy make sure the installer and package match. For more details see the online FAQs.  \ncreated with:   {$GLOBALS['FW_PACKAGE_NAME']}  \nprocessed with: {$_POST['package_name']}  \n");
 		}
 		
 		$target = $root_path;
 		$zip = new ZipArchive();
 		if ($zip->open($_POST['package_name']) === TRUE)	{
-			$zip->extractTo($target);
+			@$zip->extractTo($target);
 			DupUtil::log("INFORMATION:\t" . print_r($zip, true));
 			$close_response = $zip->close();
 			DupUtil::log("ZIP CLOSE: " . var_export($close_response, true));
@@ -1031,7 +1031,7 @@ class DupDBTextSwap {
 				return serialize($data);
 
 		} catch(Exception $error) {
-			DupUtil::log("\nRECURSIVE UNSERIALIZE ERROR: With string\n". $data, 2);	
+			DupUtil::log("\nRECURSIVE UNSERIALIZE ERROR: With string\n". $error, 2);	
 		}
 		return $data;
 	}
@@ -1061,10 +1061,10 @@ class DupDBTextSwap {
 				$serial_string = preg_match( '/^s:[0-9]+:"(.*$)/s', trim($data), $matches);
 				//Nested serial string
 				if ($serial_string) {
-					$inner = preg_replace_callback($regex, 'self::fix_string_callback', rtrim($matches[1], '";')); 
+					$inner = preg_replace_callback($regex, 'DupDBTextSwap::fix_string_callback', rtrim($matches[1], '";')); 
 					$serialized_fixed =  's:' . strlen($inner) . ':"' . $inner . '";' ;
 				} else {
-					$serialized_fixed = preg_replace_callback($regex, 'self::fix_string_callback', $data); 
+					$serialized_fixed = preg_replace_callback($regex, 'DupDBTextSwap::fix_string_callback', $data); 
 				}
 				
 				if (self::is_serialized($serialized_fixed) ) {
@@ -1246,7 +1246,7 @@ HTACCESS;
 DupUtil::log("\n--------------------------------------");
 DupUtil::log("WARNINGS");
 DupUtil::log("--------------------------------------");	
-$config_vars  = array('WP_CONTENT_DIR', 'WP_CONTENT_URL');
+$config_vars  = array('WP_CONTENT_DIR', 'WP_CONTENT_URL', 'WPCACHEHOME', 'COOKIE_DOMAIN', 'WP_SITEURL', 'WP_HOME');
 $config_found = DupUtil::string_has_value($config_vars, $config_file);
 
 //Files
@@ -1377,6 +1377,7 @@ td.dup-step1-dialog-data-details b {width:50px;display:inline-block}
 .dup-fail {display:inline-block; color:#AF0000;}
 hr.dup-dots { border:none; border-top:1px dotted silver; height:1px; width:100%;}
 div.error {padding-top:2px;}
+div.help {color:#555; font-style:italic; font-size:11px}
 
 /* ============================
 STEP 2 VIEW */
@@ -1909,7 +1910,7 @@ e||(e=b.text()||"",e=jQuery.template(s,"{{ko_with $item.koBindingContext}}"+e+"{
 		});
 		
 		$("#dup-step1-dialog-db").dialog({
-			height:400, width:500, modal: true,
+			height:400, width:550, modal: true,
 			position:['center', 150],
 			buttons: {Close: function() {$(this).dialog( "close" );}}
 		});
@@ -2101,7 +2102,7 @@ DIALOG: SERVER CHECKS  -->
 					<?php 
 						echo "<i>Path: {$GLOBALS['CURRENT_ROOT_PATH']} </i><br/>";
 						printf("<b>[%s]</b> %s <br/>", $req01a, "Is Writable");
-						printf("<b>[%s]</b> %s <br/>", $req01b, "Contains only one Zip file. <div style='padding-left:55px'>Result = {$zip_file_name}</div>");
+						printf("<b>[%s]</b> %s <br/>", $req01b, "Contains only one zip file.<div style='padding-left:55px'>Result = {$zip_file_name} <br/> <i>Manual extraction still requires zip file</i> </div> ");
 					?>
 				</td>
 			</tr>
@@ -2176,12 +2177,20 @@ DIALOG: SERVER CHECKS  -->
 DIALOG: DB CONNECTION CHECK  -->
 <div id="dup-step1-dialog-db" title="Test Database Connection" style="display:none">
 	<div id="dup-step1-dialog-db-data" style="padding: 0px 10px 10px 10px;">		
-		<div id="dbconn-test-msg"></div>
+		<div id="dbconn-test-msg" style="min-height:50px"></div>
+		<br/><hr size="1" />
+		<div class="help">
+		<b>Common Connection Issues:</b><br/>
+		- Double check case sensitive values 'User', 'Password' &amp; the 'Database Name' <br/>
+		- Validate the database and database user exist on this server <br/>
+		- Check if the database user has the correct permission levels to this database <br/>
+		- The host 'localhost' may not work on all hosting providers <br/>
+		- Contact your hosting provider for the exact required parameters <br/>
+		- See the 'Database Setup Help' section on step 1 for more details<br/>
+		- Visit the online resources 'Common FAQ page' <br/>
+		</div>
 	</div>
-</div>
-		
-
- <?php break; 
+</div> <?php break; 
 					case "1" :  ?> <?php
 
 	//DETECT ARCHIVE FILES
@@ -2300,7 +2309,7 @@ DIALOG: DB CONNECTION CHECK  -->
 		});
 		
 		$("#dup-step1-dialog-db").dialog({
-			height:400, width:500, modal: true,
+			height:400, width:550, modal: true,
 			position:['center', 150],
 			buttons: {Close: function() {$(this).dialog( "close" );}}
 		});
@@ -2492,7 +2501,7 @@ DIALOG: SERVER CHECKS  -->
 					<?php 
 						echo "<i>Path: {$GLOBALS['CURRENT_ROOT_PATH']} </i><br/>";
 						printf("<b>[%s]</b> %s <br/>", $req01a, "Is Writable");
-						printf("<b>[%s]</b> %s <br/>", $req01b, "Contains only one Zip file. <div style='padding-left:55px'>Result = {$zip_file_name}</div>");
+						printf("<b>[%s]</b> %s <br/>", $req01b, "Contains only one zip file.<div style='padding-left:55px'>Result = {$zip_file_name} <br/> <i>Manual extraction still requires zip file</i> </div> ");
 					?>
 				</td>
 			</tr>
@@ -2567,12 +2576,20 @@ DIALOG: SERVER CHECKS  -->
 DIALOG: DB CONNECTION CHECK  -->
 <div id="dup-step1-dialog-db" title="Test Database Connection" style="display:none">
 	<div id="dup-step1-dialog-db-data" style="padding: 0px 10px 10px 10px;">		
-		<div id="dbconn-test-msg"></div>
+		<div id="dbconn-test-msg" style="min-height:50px"></div>
+		<br/><hr size="1" />
+		<div class="help">
+		<b>Common Connection Issues:</b><br/>
+		- Double check case sensitive values 'User', 'Password' &amp; the 'Database Name' <br/>
+		- Validate the database and database user exist on this server <br/>
+		- Check if the database user has the correct permission levels to this database <br/>
+		- The host 'localhost' may not work on all hosting providers <br/>
+		- Contact your hosting provider for the exact required parameters <br/>
+		- See the 'Database Setup Help' section on step 1 for more details<br/>
+		- Visit the online resources 'Common FAQ page' <br/>
+		</div>
 	</div>
-</div>
-		
-
- <?php break; 
+</div> <?php break; 
 					case "2" :	?> <?php
 	$dbh = @mysqli_connect($_POST['dbhost'], $_POST['dbuser'], $_POST['dbpass'], $_POST['dbname']);
 
@@ -2883,9 +2900,10 @@ VIEW: STEP 3- INPUT -->
 		<tr>
 			<td>&raquo; <a href="javascript:void(0)" onclick="$('#dup-step3-install-report').toggle(400)"><b>View Install Report</b></a></td>
 			<td>
-				<i style='font-size:11px'>
-					<span data-bind="with: status.step2">Errors (<span data-bind="text: err_all"></span>)</span>
-					<span data-bind="with: status.step2">Warnings (<span data-bind="text: warn_all"></span>)</span>
+				<i style='font-size:11px; color:#BE2323'>
+					<span data-bind="with: status.step1">Deploy Errors: <span data-bind="text: query_errs"></span></span> &nbsp; &nbsp;
+					<span data-bind="with: status.step2">Update Errors: <span data-bind="text: err_all"></span></span> &nbsp; &nbsp;
+					<span data-bind="with: status.step2">Warnings: <span data-bind="text: warn_all"></span></span>
 				</i>
 			</td>
 		</tr>	
@@ -2932,13 +2950,13 @@ VIEW: STEP 3- INPUT -->
 		</table>
 		
 		<table class='dup-step3-report-errs' style="width:100%; border-top:none">
-			<tr><th colspan="4">Errors &amp; Warnings</th></tr>
+			<tr><th colspan="4">Errors &amp; Warnings <br/> <i style="font-size:10px; font-weight:normal">(click links below to view details)</i></th></tr>
 			<tr>
 				<td data-bind="with: status.step1">
-					<a href="javascript:void(0);" onclick="$('#dup-step3-errs-create').toggle(400)">Deploy Database Errors (<span data-bind="text: query_errs"></span>)</a><br/>
+					<a href="javascript:void(0);" onclick="$('#dup-step3-errs-create').toggle(400)">Deploy Errors (<span data-bind="text: query_errs"></span>)</a><br/>
 				</td>
 				<td data-bind="with: status.step2">
-					<a href="javascript:void(0);" onclick="$('#dup-step3-errs-upd').toggle(400)">Update Database Errors (<span data-bind="text: err_all"></span>)</a>
+					<a href="javascript:void(0);" onclick="$('#dup-step3-errs-upd').toggle(400)">Update Errors (<span data-bind="text: err_all"></span>)</a>
 				</td>
 				<td data-bind="with: status.step2">
 					<a href="#dup-step2-errs-warn-anchor" onclick="$('#dup-step3-warnlist').toggle(400)">General Warnings (<span data-bind="text: warn_all"></span>)</a>
@@ -2949,7 +2967,7 @@ VIEW: STEP 3- INPUT -->
 		
 		<div id="dup-step3-errs-create" class="dup-step3-err-msg">
 		
-			<b data-bind="with: status.step1">DEPLOY DATABASE ERRORS (<span data-bind="text: query_errs"></span>)</b><br/>
+			<b data-bind="with: status.step1">STEP 1: DEPLOY ERRORS (<span data-bind="text: query_errs"></span>)</b><br/>
 			<div class="info">Queries that error during the deploy process are logged to the <a href="installer-log.txt" target="_blank">install-log.txt</a> file.  
 			To view the error result look under the section titled 'DATABASE RESULTS'.  If errors are present they will be marked with '**ERROR**'. <br/><br/>  For errors titled
 			'Query size limit' you will need to manually post the values or update your mysql server with the max_allowed_packet setting to handle larger payloads.
@@ -2962,7 +2980,7 @@ VIEW: STEP 3- INPUT -->
 		<div id="dup-step3-errs-upd" class="dup-step3-err-msg">
 		
 			<!-- MYSQL QUERY ERRORS -->
-			<b data-bind="with: status.step2">UPDATE QUERY ERRORS (<span data-bind="text: errsql_sum"></span>) </b><br/>
+			<b data-bind="with: status.step2">STEP2: UPDATE ERRORS (<span data-bind="text: errsql_sum"></span>) </b><br/>
 			<div class="info">Errors that show here are the result of queries that could not be performed.</div>
 			<div class="content">
 				<div data-bind="foreach: status.step2.errsql"><div data-bind="text: $data"></div></div>

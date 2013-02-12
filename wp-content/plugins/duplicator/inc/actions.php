@@ -25,7 +25,7 @@ function duplicator_create() {
 	$GLOBALS['duplicator_package_log_handle'] = @fopen(DUPLICATOR_SSDIR_PATH . "/{$logfilename}", "c+");
 	
 	duplicator_log("*********************************************************");
-	duplicator_log("PACKAGE-LOG: ");
+	duplicator_log("PACKAGE-LOG: " . @date('h:i:s') );
 	duplicator_log("*********************************************************");
 	duplicator_log("duplicator: " . DUPLICATOR_VERSION);
 	duplicator_log("wordpress: {$wp_version}");
@@ -37,14 +37,15 @@ function duplicator_create() {
 
 	if($packname) {
 		
-		$max_time   = @ini_set("max_execution_time", $GLOBALS['duplicator_opts']['max_time']); 
-		$max_memory = @ini_set('memory_limit', $GLOBALS['duplicator_opts']['max_memory']);
-		$max_time   = ($max_time === false)   ? "Unabled to set max_execution_time"  : "from={$max_time} to={$GLOBALS['duplicator_opts']['max_time']}";
-		$max_memory = ($max_memory === false) ? "Unabled to set memory_limit"		 : "from={$max_memory} to={$GLOBALS['duplicator_opts']['max_memory']}";
+		$php_max_time   = @ini_set("max_execution_time", DUPLICATOR_PHP_MAX_TIME); 
+		$php_max_memory = @ini_set('memory_limit', DUPLICATOR_PHP_MAX_MEMORY);
+		$php_max_time   = ($php_max_time === false)   ? "Unabled to set php max_execution_time"  : "from={$php_max_time} to=". DUPLICATOR_PHP_MAX_TIME;
+		$php_max_memory = ($php_max_memory === false) ? "Unabled to set php memory_limit"		 : "from={$php_max_memory} to=" . DUPLICATOR_PHP_MAX_MEMORY;
 		
 		@set_time_limit(0);
-		duplicator_log("max_time: {$max_time}");
-		duplicator_log("max_memory: {$max_memory}");
+		duplicator_log("php_max_time: {$php_max_time}");
+		duplicator_log("php_max_memory: {$php_max_memory}");
+		duplicator_log("mysql wait_timeout:" . DUPLICATOR_PHP_MAX_TIME);
 
 		$zipfilename  = "{$uniquename}_package.zip";
 		$sqlfilename  = "{$uniquename}_database.sql";
@@ -55,19 +56,17 @@ function duplicator_create() {
 		$exefilepath  = DUPLICATOR_SSDIR_PATH . "/{$exefilename}";
 		$zipsize 	  = 0;
 		
-		duplicator_log("mysql wait_timeout: {$GLOBALS['duplicator_opts']['max_time']}");
-		$wpdb->query("SET session wait_timeout = {$GLOBALS['duplicator_opts']['max_time']}");
+		$wpdb->query("SET session wait_timeout = " . DUPLICATOR_DB_MAX_TIME);
 		
-
 		duplicator_log("*********************************************************");
-		duplicator_log("SQL SCRIPT");
+		duplicator_log("SQL SCRIPT: " . @date('h:i:s') );
 		duplicator_log("*********************************************************");
 		duplicator_create_dbscript($sqlfilepath);		
 		
 		
 		//CREATE ZIP ARCHIVE
 		duplicator_log("*********************************************************");
-		duplicator_log("ZIP ARCHIVE");
+		duplicator_log("ZIP ARCHIVE: " . @date('h:i:s') );
 		duplicator_log("*********************************************************");
 		
 		$zip = new Duplicator_Zip($zipfilepath, rtrim(DUPLICATOR_WPROOTPATH, '/'), $sqlfilepath);
@@ -105,7 +104,7 @@ function duplicator_create() {
 	
 		//UPDATE INSTALL FILE
 		duplicator_log("*********************************************************");
-		duplicator_log("UPDATE INSTALLER FILE");
+		duplicator_log("UPDATE INSTALLER FILE: " .@date('h:i:s') );
 		duplicator_log("*********************************************************");
 		duplicator_build_installerFile();
 		duplicator_create_installerFile($uniquename);
@@ -132,7 +131,7 @@ function duplicator_create() {
 	} 
 	
 	duplicator_log("*********************************************************");
-	duplicator_log("DONE PROCESSING => {$packname}");
+	duplicator_log("DONE PROCESSING => {$packname} " . @date('h:i:s'));
 	duplicator_log("*********************************************************");
 	@fclose($GLOBALS['duplicator_package_log_handle']);
 	die();
@@ -178,13 +177,13 @@ function duplicator_delete() {
 function duplicator_system_check() {
 	global $wpdb;
 	
-	@set_time_limit($GLOBALS['duplicator_opts']['max_time']);
+	@set_time_limit(0);
 	duplicator_init_snapshotpath();
 	
 	$json = array();
 		
 	//SYS-100: FILE PERMS
-	$test = is_readable(DUPLICATOR_WPROOTPATH)
+	$test = is_writeable(DUPLICATOR_WPROOTPATH)
 			&& is_writeable(DUPLICATOR_SSDIR_PATH)
 			&& is_writeable(DUPLICATOR_PLUGIN_PATH . 'files/')
 			&& is_writeable(DUPLICATOR_PLUGIN_PATH . 'files/installer.rescue.php');
@@ -202,7 +201,7 @@ function duplicator_system_check() {
 	$json['SYS-102'] = ($test) ? 'Pass' : 'Fail';
 	
 	//SYS-103 SAFE MODE
-	$test = ini_get('safe_mode');;
+	$test = ini_get('safe_mode');
 	$json['SYS-103'] = ! ($test) ? 'Pass' : 'Fail';
 	
 	//SYS-104 MYSQL SUPPORT
@@ -315,22 +314,13 @@ function duplicator_settings(){
 		}
 	}
 
-	if (is_numeric($_POST['max_memory'])) {
-		$maxmem = $_POST['max_memory'] < 256 ? 256 : $_POST['max_memory'];
-	} else {
-		$maxmem = 256;
-	}
-	
 	$duplicator_opts = array(
 		'dbhost'		=>$_POST['dbhost'],
 		'dbname'		=>$_POST['dbname'],
 		'dbuser'		=>$_POST['dbuser'],
-		'dbiconv'		=>$_POST['dbiconv'],
-		'url_new'			=>rtrim($_POST['url_new'], '/'),
+		'url_new'		=>rtrim($_POST['url_new'], '/'),
 		'email-me'		=>$_POST['email-me'],
 		'email_others'	=>$_POST['email_others'],
-		'max_time'		=>$_POST['max_time'],
-		'max_memory'	=>preg_replace('/\D/', '', $maxmem) . 'M',
 		'skip_ext'		=>str_replace(",", ";", $skip_ext),
 		'dir_bypass'	=>$by_pass_clean,
 		'log_level'		=>$_POST['log_level'],

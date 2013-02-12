@@ -3,7 +3,7 @@
 Plugin Name: Duplicator
 Plugin URI: http://www.lifeinthegrid.com/duplicator/
 Description: Create a full WordPress backup of your files and database with one click. Duplicate and move an entire site from one location to another in 3 easy steps. Create full snapshot of your site at any point in time.
-Version: 0.4.0
+Version: 0.4.2
 Author: LifeInTheGrid
 Author URI: http://www.lifeinthegrid.com
 License: GPLv2 or later
@@ -41,22 +41,15 @@ if (is_admin() == true) {
 	$GLOBALS['duplicator_opts']['dbhost']		= isset($GLOBALS['duplicator_opts']['dbhost'])			? $GLOBALS['duplicator_opts']['dbhost']			: '';
 	$GLOBALS['duplicator_opts']['dbname']		= isset($GLOBALS['duplicator_opts']['dbname'])			? $GLOBALS['duplicator_opts']['dbname']			: '';
 	$GLOBALS['duplicator_opts']['dbuser']		= isset($GLOBALS['duplicator_opts']['dbuser'])			? $GLOBALS['duplicator_opts']['dbuser'] 		: '';
-	$GLOBALS['duplicator_opts']['dbiconv']		= isset($GLOBALS['duplicator_opts']['dbiconv'])			? $GLOBALS['duplicator_opts']['dbiconv']		: '1';
 	$GLOBALS['duplicator_opts']['dbadd_drop']	= isset($GLOBALS['duplicator_opts']['dbadd_drop'])		? $GLOBALS['duplicator_opts']['dbadd_drop']     : '0';
 	$GLOBALS['duplicator_opts']['url_new']  	= isset($GLOBALS['duplicator_opts']['url_new'] ) 		? $GLOBALS['duplicator_opts']['url_new']  		: '';
 	$GLOBALS['duplicator_opts']['email-me']		= isset($GLOBALS['duplicator_opts']['email-me'])		? $GLOBALS['duplicator_opts']['email-me']		: '0';
 	$GLOBALS['duplicator_opts']['log_level'] 	= isset($GLOBALS['duplicator_opts']['log_level'])		? $GLOBALS['duplicator_opts']['log_level']  	: '0';
-	$GLOBALS['duplicator_opts']['max_memory']	= isset($GLOBALS['duplicator_opts']['max_memory'])  	? $GLOBALS['duplicator_opts']['max_memory'] 	: '1000M';
 	$GLOBALS['duplicator_opts']['email_others']	= isset($GLOBALS['duplicator_opts']['email_others']) 	? $GLOBALS['duplicator_opts']['email_others']	: '';
 	$GLOBALS['duplicator_opts']['skip_ext']		= isset($GLOBALS['duplicator_opts']['skip_ext'])  		? $GLOBALS['duplicator_opts']['skip_ext'] 		: '';
 	$GLOBALS['duplicator_opts']['dir_bypass']	= isset($GLOBALS['duplicator_opts']['dir_bypass'])		? $GLOBALS['duplicator_opts']['dir_bypass']		: '';
 	$GLOBALS['duplicator_opts']['rm_snapshot']  = isset($GLOBALS['duplicator_opts']['rm_snapshot']) 	? $GLOBALS['duplicator_opts']['rm_snapshot'] 	: '1';
-	//max_time needs to be numeric
-	if (isset($GLOBALS['duplicator_opts']['max_time'])) {
-		$GLOBALS['duplicator_opts']['max_time']		= is_numeric($GLOBALS['duplicator_opts']['max_time'])	? $GLOBALS['duplicator_opts']['max_time']   	: 1000;
-	} else {
-		$GLOBALS['duplicator_opts']['max_time'] = 1000;
-	}
+
 	
 	//Default Arrays
 	$GLOBALS['duplicator_bypass-array']	  = explode(";", $GLOBALS['duplicator_opts']['dir_bypass'], -1);
@@ -95,11 +88,8 @@ if (is_admin() == true) {
 			'url_new'			=>'',
 			'email-me'		=>"{$GLOBALS['duplicator_opts']['email-me']}",
 			'email_others'	=>"{$GLOBALS['duplicator_opts']['email_others']}",
-			'max_time'		=>$GLOBALS['duplicator_opts']['max_time'],
-			'max_memory'	=>$GLOBALS['duplicator_opts']['max_memory'],
 			'dir_bypass'	=>"{$GLOBALS['duplicator_opts']['dir_bypass']}",
 			'log_level'		=>'0',
-			'dbiconv'		=>"{$GLOBALS['duplicator_opts']['dbiconv']}",
 			'skip_ext'		=>"{$GLOBALS['duplicator_opts']['skip_ext']}",
 			'rm_snapshot'	=>"{$GLOBALS['duplicator_opts']['rm_snapshot']}");
 				
@@ -225,7 +215,7 @@ if (is_admin() == true) {
 	 *  Init routines  */
 	function duplicator_init() {
 	   /* Register our stylesheet. */
-	   wp_register_style('jquery-ui', 		  DUPLICATOR_PLUGIN_URL . 'css/jquery-ui.css', null , "1.8.21" );
+	   wp_register_style('jquery-ui', 		  DUPLICATOR_PLUGIN_URL . 'css/jquery-ui.css', null , "1.9.2" );
 	   wp_register_style('duplicator_style',  DUPLICATOR_PLUGIN_URL . 'css/style.css' );
 	}
 
@@ -262,10 +252,14 @@ if (is_admin() == true) {
 	}
 
 	/**
-	 *  DUPLICATOR_SCRIPTS
-	 *  Loads the required javascript libs only for this plugin  */
+	*  DUPLICATOR_SCRIPTS
+	*  Loads the required javascript libs only for this plugin  */
 	function duplicator_scripts() {
-		wp_enqueue_script("jquery-ui", DUPLICATOR_PLUGIN_URL . "js/jquery-ui.min.js", array( 'jquery' ), "1.8.21");
+		wp_enqueue_script('jquery');
+		wp_enqueue_script('jquery-ui-core');
+		wp_enqueue_script('jquery-ui-dialog');
+		wp_enqueue_script('jquery-ui-button');
+		wp_enqueue_script('jquery-ui-tabs');
 	}
 
 	/**
