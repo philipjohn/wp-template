@@ -15,8 +15,8 @@ if ( false ) {
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<title>Error: PHP is not running</title>
 </head>
-<body>
-	<h1 id="logo"><img alt="WordPress" src="images/wordpress-logo.png?ver=20120216" /></h1>
+<body class="wp-core-ui">
+	<h1 id="logo"><a href="http://wordpress.org/">WordPress</a></h1>
 	<h2>Error: PHP is not running</h2>
 	<p>WordPress requires that your web server is running PHP. Your server does not have PHP installed, or PHP is turned off.</p>
 </body>
@@ -43,132 +43,6 @@ require_once(dirname(dirname(__FILE__)) . '/wp-includes/wp-db.php');
 
 $step = isset( $_GET['step'] ) ? (int) $_GET['step'] : 0;
 
-/** Plugins to activate upon installation */
-$default_plugins = array(
-		'backwpup/backwpup.php',
-		'better-wp-security/better-wp-security.php',
-		'disable-pointers/disable-pointers.php',
-		'wordpress-firewall-2/wordpress-firewall-2.php',
-		'wordpress-importer/wordpress-importer.php'
-		);
-
-/**
- * {@internal Missing Short Description}}
- *
- * {@internal Missing Long Description}}
- *
- * @since 2.1.0
- *
- * @param int $user_id User ID.
- */
-function wp_install_defaults($user_id) {
-	global $wpdb, $wp_rewrite, $current_site, $table_prefix;
-
-	// Default category
-	$cat_name = __('News');
-	/* translators: Default category slug */
-	$cat_slug = sanitize_title(_x('News', 'Default category slug'));
-
-	if ( global_terms_enabled() ) {
-		$cat_id = $wpdb->get_var( $wpdb->prepare( "SELECT cat_ID FROM {$wpdb->sitecategories} WHERE category_nicename = %s", $cat_slug ) );
-		if ( $cat_id == null ) {
-			$wpdb->insert( $wpdb->sitecategories, array('cat_ID' => 0, 'cat_name' => $cat_name, 'category_nicename' => $cat_slug, 'last_updated' => current_time('mysql', true)) );
-			$cat_id = $wpdb->insert_id;
-		}
-		update_option('default_category', $cat_id);
-	} else {
-		$cat_id = 1;
-	}
-
-	$wpdb->insert( $wpdb->terms, array('term_id' => $cat_id, 'name' => $cat_name, 'slug' => $cat_slug, 'term_group' => 0) );
-	$wpdb->insert( $wpdb->term_taxonomy, array('term_id' => $cat_id, 'taxonomy' => 'category', 'description' => '', 'parent' => 0, 'count' => 1));
-	$cat_tt_id = $wpdb->insert_id;
-
-	// Default link category
-	$cat_name = __('Blogroll');
-	/* translators: Default link category slug */
-	$cat_slug = sanitize_title(_x('Blogroll', 'Default link category slug'));
-
-	if ( global_terms_enabled() ) {
-		$blogroll_id = $wpdb->get_var( $wpdb->prepare( "SELECT cat_ID FROM {$wpdb->sitecategories} WHERE category_nicename = %s", $cat_slug ) );
-		if ( $blogroll_id == null ) {
-			$wpdb->insert( $wpdb->sitecategories, array('cat_ID' => 0, 'cat_name' => $cat_name, 'category_nicename' => $cat_slug, 'last_updated' => current_time('mysql', true)) );
-			$blogroll_id = $wpdb->insert_id;
-		}
-		update_option('default_link_category', $blogroll_id);
-	} else {
-		$blogroll_id = 2;
-	}
-
-	$wpdb->insert( $wpdb->terms, array('term_id' => $blogroll_id, 'name' => $cat_name, 'slug' => $cat_slug, 'term_group' => 0) );
-	$wpdb->insert( $wpdb->term_taxonomy, array('term_id' => $blogroll_id, 'taxonomy' => 'link_category', 'description' => '', 'parent' => 0, 'count' => 7));
-	$blogroll_tt_id = $wpdb->insert_id;
-
-	if ( ! is_multisite() )
-		update_user_meta( $user_id, 'show_welcome_panel', 0 );
-	elseif ( ! is_super_admin( $user_id ) && ! metadata_exists( 'user', $user_id, 'show_welcome_panel' ) )
-	update_user_meta( $user_id, 'show_welcome_panel', 0 );
-
-	if ( is_multisite() ) {
-		// Flush rules to pick up the new page.
-		$wp_rewrite->init();
-		$wp_rewrite->flush_rules();
-
-		$user = new WP_User($user_id);
-		$wpdb->update( $wpdb->options, array('option_value' => $user->user_email), array('option_name' => 'admin_email') );
-
-		// Remove all perms except for the login user.
-		$wpdb->query( $wpdb->prepare("DELETE FROM $wpdb->usermeta WHERE user_id != %d AND meta_key = %s", $user_id, $table_prefix.'user_level') );
-		$wpdb->query( $wpdb->prepare("DELETE FROM $wpdb->usermeta WHERE user_id != %d AND meta_key = %s", $user_id, $table_prefix.'capabilities') );
-
-		// Delete any caps that snuck into the previously active blog. (Hardcoded to blog 1 for now.) TODO: Get previous_blog_id.
-		if ( !is_super_admin( $user_id ) && $user_id != 1 )
-			$wpdb->delete( $wpdb->usermeta, array( 'user_id' => $user_id , 'meta_key' => $wpdb->base_prefix.'1_capabilities' ) );
-	}
-}
-
-/**
- * {@internal Missing Short Description}}
- *
- * {@internal Missing Long Description}}
- *
- * @since 2.1.0
- *
- * @param string $blog_title Blog title.
- * @param string $blog_url Blog url.
- * @param int $user_id User ID.
- * @param string $password User's Password.
- */
-function wp_new_blog_notification($blog_title, $blog_url, $user_id, $password) {
-	// do nothing, I don't want install notifications!
-}
-
-/**
- * Activate Default Plugins
- * 
- * After installation, this function activates the default plugins we want, saving us some time
- * 
- * @param string $plugin Plugin, e.g akismet/akismet.php
- * 
- * @author Philip John
- */
-function run_activate_plugin( $plugin ) {
-	$current = get_option( 'active_plugins' );
-	$plugin = plugin_basename( trim( $plugin ) );
-		
-	if ( !in_array( $plugin, $current ) ) {
-		$current[] = $plugin;
-		sort( $current );
-		do_action( 'activate_plugin', trim( $plugin ) );
-		update_option( 'active_plugins', $current );
-		do_action( 'activate_' . trim( $plugin ) );
-		do_action( 'activated_plugin', trim( $plugin) );
-	}
-		
-	return null;
-}
-
-
 /**
  * Display install header.
  *
@@ -184,10 +58,12 @@ function display_header() {
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<title><?php _e( 'WordPress &rsaquo; Installation' ); ?></title>
-	<?php wp_admin_css( 'install', true ); ?>
+	<?php
+	wp_admin_css( 'install', true );
+	?>
 </head>
-<body<?php if ( is_rtl() ) echo ' class="rtl"'; ?>>
-<h1 id="logo"><img alt="WordPress" src="images/wordpress-logo.png?ver=20120216" /></h1>
+<body class="wp-core-ui<?php if ( is_rtl() ) echo ' rtl'; ?>">
+<h1 id="logo"><a href="<?php esc_attr_e( 'http://wordpress.org/' ); ?>"><?php _e( 'WordPress' ); ?></a></h1>
 
 <?php
 } // end display_header()
@@ -260,7 +136,7 @@ function display_setup_form( $error = null ) {
 			<td colspan="2"><label><input type="checkbox" name="blog_public" value="1" <?php checked( $blog_public ); ?> /> <?php _e( 'Allow search engines to index this site.' ); ?></label></td>
 		</tr>
 	</table>
-	<p class="step"><input type="submit" name="Submit" value="<?php esc_attr_e( 'Install WordPress' ); ?>" class="button" /></p>
+	<p class="step"><input type="submit" name="Submit" value="<?php esc_attr_e( 'Install WordPress' ); ?>" class="button button-large" /></p>
 </form>
 <?php
 } // end display_setup_form()
@@ -268,7 +144,7 @@ function display_setup_form( $error = null ) {
 // Let's check to make sure WP isn't already installed.
 if ( is_blog_installed() ) {
 	display_header();
-	die( '<h1>' . __( 'Already Installed' ) . '</h1><p>' . __( 'You appear to have already installed WordPress. To reinstall please clear your old database tables first.' ) . '</p><p class="step"><a href="../wp-login.php" class="button">' . __('Log In') . '</a></p></body></html>' );
+	die( '<h1>' . __( 'Already Installed' ) . '</h1><p>' . __( 'You appear to have already installed WordPress. To reinstall please clear your old database tables first.' ) . '</p><p class="step"><a href="../wp-login.php" class="button button-large">' . __( 'Log In' ) . '</a></p></body></html>' );
 }
 
 $php_version    = phpversion();
@@ -346,7 +222,6 @@ switch($step) {
 			$wpdb->show_errors();
 			$result = wp_install($weblog_title, $user_name, $admin_email, $public, '', $admin_password);
 			extract( $result, EXTR_SKIP );
-			
 ?>
 
 <h1><?php _e( 'Success!' ); ?></h1>
@@ -368,15 +243,11 @@ switch($step) {
 	</tr>
 </table>
 
-<p class="step"><a href="../wp-login.php" class="button"><?php _e( 'Log In' ); ?></a></p>
+<p class="step"><a href="../wp-login.php" class="button button-large"><?php _e( 'Log In' ); ?></a></p>
 
 <?php
 		}
-		// Now activate our default plugins
-		foreach ($default_plugins as $plugin){
-			run_activate_plugin($plugin);
-		}
-	break;
+		break;
 }
 ?>
 <script type="text/javascript">var t = document.getElementById('weblog_title'); if (t){ t.focus(); }</script>
