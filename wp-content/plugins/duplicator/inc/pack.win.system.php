@@ -1,83 +1,6 @@
 <!-- ==========================================
-DIALOG: PACKAGE CONFIRMATION-->
-<div id="dup-dlg-package-confirm" title="<?php _e('Package Creation', 'wpduplicator'); ?>">
-	<span class="ui-icon ui-icon-disk" style="float:left; margin:0 7px 20px 0; line-height:18px;"></span>
-	<b><?php _e("Create a new Package Set?", 'wpduplicator');	?></b>
-	
-	<p style="padding:10px 20px 10px 20px; line-height:26px; text-align:left; border:1px solid #efefef; border-radius:5px">
-		<b><?php _e('Name', 'wpduplicator') ?>:</b> <span id="dup-dlg-package-confirm-msg"></span><br/>
-
-		<b><?php _e('Pre-Zip Overview', 'wpduplicator'); ?>:</b>
-		<span id='dup-dlg-package-confirm-scannow-data'>
-			<a href="javascript:void(0)" onclick="Duplicator.getSystemDirectory()"><?php _e("Perform Scan", 'wpduplicator') ?></a> 
-		</span><br/>
-		<i style='font-size:11px'><?php _e("Scan sizes over 1GB may not finish processing on some hosting providers.", 'wpduplicator') ?></i>
-		
-		<div style='font-size:11px; line-height:15px'>
-			<i>
-				<?php printf("%s <a href='javascript:void(0)'  onclick='Duplicator.optionsOpen()'>%s</a>. %s",
-						__('Note: A scan will provide an estimate on the size of your file system.  The scan will exclude items in the', 'wpduplicator'),
-						__('directory filter list', 'wpduplicator'),
-						__('Files that are not readable by the plugin will not be included in the overview.', 'wpduplicator'));
-				?>
-			</i>
-		</div>
-	</p>
-</div>
-
-<!-- ==========================================
-DIALOG: SYSTEM ERROR -->
-<div id="dup-dlg-system-error" title="<?php _e('System Constraint', 'wpduplicator'); ?>">
-	<p>
-		<span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0; line-height:18px;"></span>
-		<?php _e("Please try again! An issue has occurred.", 'wpduplicator');	?>
-	</p>
-	
-	<div style="padding: 0px 20px 20px 20px;">
-		<b><?php _e("Recommendations", 'wpduplicator') ?></b><br/>
-		<div id="dup-system-err-msg1">
-			<li>
-				<?php printf("<a href='javascript:void(0)' onclick='Duplicator.getSystemCheck()'>%s</a> %s &amp; 
-							  <a href='javascript:void(0)' onclick='window.location.reload();'>%s</a> %s",
-						__("Validate", 'wpduplicator'),
-					    __("your system", 'wpduplicator'),
-						__("refresh", 'wpduplicator'),
-						__("the dashboard.", 'wpduplicator')); ?>
-			</li>
-			<li>
-				<?php printf("<a href='javascript:void(0)' onclick='Duplicator.openLog()'>%s</a> %s.",
-						__("Monitor", 'wpduplicator'),
-						__("your log file a few more minutes as processing may continue on some systems", 'wpduplicator')); 
-				?>
-			</li>
-			<li><?php _e('Contact your server admin to have the page timeout increased (see duration below)', 'wpduplicator') ?>.</li>
-			<li><?php _e('Consider adding a directory filter in the options dialog if the process continues to timeout', 'wpduplicator') ?>.</li>
-			<li><?php _e('Check your disk space.  For hosted sites review your providers help.', 'wpduplicator') ?></li>
-			<li>
-				<?php printf("%s <a href='%s' target='_blank'>%s</a> %s", 
-						__("Consider using an" , 'wpduplicator'),
-						__(DUPLICATOR_CERTIFIED, 'wpduplicator'),
-						__("approved" , 'wpduplicator'),
-						__("hosting provider.", 'wpduplicator')	); ?>
-			</li>
-		</div><br/>
-	
-		<b><?php _e("Server Response", 'wpduplicator') ?></b><br/>
-		<div id="dup-system-err-msg2"></div>
-		<i style='font-size:11px'>
-			<?php 
-				printf('%s %s', 
-					__("See online help for more details at", 'wpduplicator'), 
-					"<a href='" . DUPLICATOR_HELPLINK . "' target='_blank'>support.lifeinthegrid.com</a>" );
-			?>
-		</i>
-	</div>
-</div>
-
-
-<!-- ==========================================
 DIALOG: SYSTEM CHECK -->
-<div id="dup-dlg-system-check" title="<?php _e('System Status', 'wpduplicator'); ?>">
+<div id="dup-dlg-system-check" title="<?php _e('System Status', 'wpduplicator'); ?>" style="display:none">
 	
 	<span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0; line-height:18px;"></span>
 	<?php _e("Please validate your system configuration.", 'wpduplicator'); ?>
@@ -87,7 +10,7 @@ DIALOG: SYSTEM CHECK -->
 		<div id="dup-sys-check-data">
 		
 			<!-- =========================================
-			SYSTEM REQUIRMENTS -->
+			SYSTEM REQUIREMENTS -->
 			<ul id="dup-sys-check-data-reqs">
 				<li>
 					<b><?php _e("SYSTEM REQUIRMENTS", 'wpduplicator') ?></b><hr size="1"/>
@@ -106,8 +29,6 @@ DIALOG: SYSTEM CHECK -->
 							$test = is_writeable(DUPLICATOR_PLUGIN_PATH . 'files/') ? 'Pass' : 'Fail';
 							printf("<b>%s</b> [%s] <br/>", $test, DUPLICATOR_PLUGIN_PATH . 'files/');
 							
-							$test = is_writeable(DUPLICATOR_PLUGIN_PATH . 'files/installer.rescue.php') ? 'Pass' : 'Fail';
-							printf("<b>%s</b> [%s] <br/>", $test, DUPLICATOR_PLUGIN_PATH . 'files/installer.rescue.php');
 							
 							echo "<br/>";	
 							
@@ -123,9 +44,10 @@ DIALOG: SYSTEM CHECK -->
 				<li>
 					<div class='dup-sys-check-title'><a>SYS-101: <?php _e('Reserved Files', 'wpduplicator');?></a></div> <span id='SYS-101'></span>
 					<div class='dup-sys-check-data-details'>
-						<?php 
-							_e('If this check fails then a reserved file was found in the WordPress root directory. The following are reserved file names installer.php, installer-data.sql and installer-log.txt.  In order to archive your data correctly please remove any of these files from your WordPress root directory. Then try creating your package again.', 'wpduplicator');
-						?>
+						<form method="post" action="admin.php?page=duplicator_cleanup_page&remove=1">
+							<?php _e('A reserved file(s) was found in the WordPress root directory. Reserved file names are installer.php, installer-data.sql and installer-log.txt.  To archive your data correctly please remove any of these files from your WordPress root directory.  Then try creating your package again.', 'wpduplicator');?>
+							<br/><input type='submit' class='button action' value='<?php _e('Remove Files Now', 'wpduplicator')?>' style='font-size:10px; margin-top:5px;' />
+						</form>
 					</div>
 				</li>
 				<li>
@@ -166,8 +88,15 @@ DIALOG: SYSTEM CHECK -->
 							printf("%s <b>[%s]</b>. %s",
 								__("The version of PHP on this server is ", 'wpduplicator'),
 								phpversion(),
-								__("The Duplicator requires at least PHP version 5.2.17+ on this server.  Please contact your host and have them upgrade to this stable secure version if the test fails.", 'wpduplicator')
+								__("The Duplicator requires PHP version 5.2.17+ or higher.  Please contact your host and have them upgrade to this stable secure version.", 'wpduplicator')
 							);
+							
+							printf("<br/><b>%s</b>:<br/>", __("Requried PHP functions", 'wpduplicator'));
+							
+							$php_test2 = function_exists("file_get_contents") ? 'Pass' : 'Fail';
+							printf("<b>%s</b> [file_get_contents] <br/>", $php_test2);
+							$php_test3 = function_exists("file_put_contents") ? 'Pass' : 'Fail';
+							printf("<b>%s</b> [file_put_contents] <br/>", $php_test3);
 						?>
 					</div>
 				</li>	
@@ -214,26 +143,25 @@ DIALOG: SYSTEM CHECK -->
 			
 			
 			<hr class='dup-dots' />
-			<!-- SAPI -->
-			<b><?php _e('PHP SAPI', 'wpduplicator'); ?>:</b>  <?php echo php_sapi_name(); ?><br/>
+
 			
 			<!-- PRE-ZIP OVERVIEW -->
 			<b><?php _e('Pre-Zip Overview', 'wpduplicator'); ?>:</b> 
 			<span id='dup-sys-scannow-data'>
-				<a href="javascript:void(0)" onclick="Duplicator.getSystemDirectory()"><?php _e("Scan Now", 'wpduplicator') ?></a> 
+				<a href="javascript:void(0)" onclick="Duplicator.Pack.ScanRootDirectory()"><?php _e("Scan Now", 'wpduplicator') ?></a> 
 			</span><br/>
 			
 			
-			<b>W3 Total Cache:</b>
+			<b><?php _e('Cached Data', 'wpduplicator'); ?>:</b>
 			<?php 
-				$w3tc_path = duplicator_safe_path(WP_CONTENT_DIR) .  '/w3tc';
-				if (file_exists($w3tc_path) && ! strstr($GLOBALS['duplicator_opts']['dir_bypass'], $w3tc_path)):
+				$cache_path = duplicator_safe_path(WP_CONTENT_DIR) .  '/cache';
+				if (file_exists($cache_path) && ! strstr($GLOBALS['duplicator_opts']['dir_bypass'], $cache_path)):
 			?>
 				<div class="dup-sys-fail"><?php _e("Cache Directory Found", 'wpduplicator') ?>.</div> 
-				<a href="javascript:void(0)" onclick="Duplicator.optionsAppendByPassList('<?php echo addslashes($w3tc_path); ?>')"><?php _e("Add to exclusion path now", 'wpduplicator') ?></a>
-			<?php elseif (strstr($GLOBALS['duplicator_opts']['dir_bypass'], $w3tc_path)): ?>
+				<a href="javascript:void(0)" onclick="Duplicator.Pack.OptionsAppendCachePath('<?php echo addslashes($cache_path); ?>')"><?php _e("Add to exclusion path now", 'wpduplicator') ?></a>
+			<?php elseif (strstr($GLOBALS['duplicator_opts']['dir_bypass'], $cache_path)): ?>
 				<div class="dup-sys-pass"><?php _e("Directory excluded", 'wpduplicator') ?></div><br/>
-				<i style='font-weight:normal;font-size:11px'><?php _e("Path", 'wpduplicator') ?>: <?php echo addslashes($w3tc_path); ?></i>
+				<i style='font-weight:normal;font-size:11px'><?php _e("Path", 'wpduplicator') ?>: <?php echo addslashes($cache_path); ?></i>
 			<?php else: ?>
 				<div class="dup-sys-pass"><?php _e("Cache Directory Not Found", 'wpduplicator') ?></div>
 			<?php endif; ?><br /><br />
@@ -263,19 +191,104 @@ DIALOG: SYSTEM CHECK -->
 </div>
 
 
-<!-- ==========================================
-DIALOG: QUICK PATH -->
-<div id="dup-dlg-quick-path" title="<?php _e('Download Links', 'wpduplicator'); ?>">
-	<p>
-		<span class="ui-icon ui-icon-locked" style="float:left; margin:0 7px 20px 0; line-height:18px;"></span>
-		<?php _e("The following links contain sensitive data.  Please share with caution!", 'wpduplicator');	?>
-	</p>
+<script type="text/javascript">
+jQuery(document).ready(function($) {
 	
-	<div style="padding: 0px 20px 20px 20px;">
-		<a href="javascript:void(0)" style="display:inline-block; text-align:right" onclick="Duplicator.selectQuickPath()">[Select All]</a> <br/>
-		<textarea id="dup-dlg-quick-path-data" style='border:1px solid silver; border-radius:5px; width:96%; height:205px; font-size:11px'></textarea><br/>
-		<i style='font-size:11px'><?php _e("The database SQL script is a quick link to your database backup script.  An exact copy is also stored in the package.", 'wpduplicator'); ?></i>
-	</div>
-</div>
+	/*	----------------------------------------
+	*	METHOD: Sets up and diplays the System Status dialog */ 
+	Duplicator.Pack.ShowSystemDialog = function(data) {
+		//Set Pass/Fail Flags
+		for (key in data) {
+			var html = (data[key] == 'Fail') ? "<div class='dup-sys-fail'>Fail</div>" : "<div class='dup-sys-pass'>Pass</div>";
+			$("#" + key).html(html)
+		}
+
+		$('#system-check-msg').animate({ scrollTop: $('#system-check-msg').attr("scrollHeight") }, 2000)
+		$("#dup-dlg-system-check").dialog("open");
+		Duplicator.Pack.SetStatus("<?php _e('Ready to create new package.', 'wpduplicator'); ?>");
+	}	
+
+	/*	----------------------------------------
+	*	METHOD: Performs the ajax request for a system check */ 
+	Duplicator.Pack.RunSystemCheck = function() {
+		Duplicator.Pack.SetStatus("<?php _e('Checking System Status.  Please Wait!', 'wpduplicator'); ?>", 'progress');
+		$.ajax({
+			type: "POST",
+			url: ajaxurl,
+			dataType: "json",
+			timeout: 10000000,
+			data: "action=duplicator_system_check",
+			beforeSend: function() {Duplicator.StartAjaxTimer(); },
+			complete: function() {Duplicator.EndAjaxTimer(); },			
+			success: function(data) {Duplicator.Pack.ShowSystemDialog(data);},
+			error: function(data)   {
+				Duplicator.Pack.ShowError('Duplicator.Pack.RunSystemCheck', data);
+			}
+		});
+	}
+	
+	/*	----------------------------------------
+	*	METHOD: Show the size/count of the directory to be zipped */ 
+	Duplicator.Pack.ScanRootDirectory = function() {
+		$.ajax({
+			type: "POST",
+			url: ajaxurl,
+			dataType: "json",
+			timeout: 10000000,
+			data: "action=duplicator_system_directory",
+			beforeSend: function() { 
+				Duplicator.StartAjaxTimer(); 
+				var html = "<?php _e('Scanning Please Wait', 'wpduplicator'); ?>... " + "<img src='<?php echo DUPLICATOR_PLUGIN_URL  ?>assets/img/progress.gif' style='height:7px; width:46px;'  />" ;
+				$('#dup-sys-scannow-data, #dup-dlg-package-confirm-scannow-data').html(html);	
+			},
+			complete: function() {Duplicator.EndAjaxTimer(); },
+			success: function(data) {
+				var size    =  data.size 	|| "<?php _e('unreadable', 'wpduplicator'); ?>";
+				var count   =  data.count 	|| "<?php _e('unreadable', 'wpduplicator'); ?>";
+				var folders =  data.folders || "<?php _e('unreadable', 'wpduplicator'); ?>";
+				var flag    =  (data.flag || size.indexOf("-") != -1) ? "<?php _e('*Scan Error', 'wpduplicator'); ?>" : "";
+				var html    =  size + " " + count +  " <?php _e('Files', 'wpduplicator'); ?>, " + folders +  " <?php _e('Folders', 'wpduplicator'); ?> " + flag; 
+				$('#dup-sys-scannow-data, #dup-dlg-package-confirm-scannow-data').html("<i>" + html + "</i>");
+				
+			},
+			error: function(data)   {
+				$('#dup-sys-scannow-data, #dup-dlg-package-confirm-scannow-data').html("<?php _e('error scanning directory', 'wpduplicator'); ?>");
+				Duplicator.Pack.ShowError('Duplicator.Pack.ScanRootDirectory', data);
+			}
+		});
+	}
+	
+	/*	----------------------------------------
+	*	METHOD: Toggle the system requirment details*/ 
+	Duplicator.Pack.ToggleSystemDetails = function() {
+		if ($(this).parents('li').children('div.dup-sys-check-data-details').is(":hidden")) {
+			$(this).children('span').addClass('ui-icon-triangle-1-s').removeClass('ui-icon-triangle-1-e');;
+			$(this).parents('li').children('div.dup-sys-check-data-details').show(250);
+		} else {
+			$(this).children('span').addClass('ui-icon-triangle-1-e').removeClass('ui-icon-triangle-1-s');
+			$(this).parents('li').children('div.dup-sys-check-data-details').hide(250);
+		}
+	}
 
 
+	//LOAD: 'System Status' Dialog
+	$("#dup-dlg-system-check").dialog({
+		autoOpen:false, height:575, width:550, create:Duplicator.UI.CreateDialog, close:Duplicator.UI.CloseDialog, modal: true, 
+		buttons: {
+			'close' : {
+					'text' : "<?php _e("Close", 'wpduplicator') ?>",
+					'class': "button action",
+					'click' : function() { $(this).dialog("close");}
+				}
+			}
+	});
+
+	//Make the system requirments toggle
+	$('#dup-sys-check-data-reqs a').each(function() {
+		$(this).attr('href', 'javascript:void(0)');
+		$(this).click(Duplicator.Pack.ToggleSystemDetails);
+		$(this).prepend("<span class='ui-icon ui-icon-triangle-1-e dup-toggle' />");
+	});
+		
+});
+</script>

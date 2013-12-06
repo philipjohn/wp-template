@@ -14,14 +14,30 @@
 	@chmod(duplicator_safe_path($logs[0]), 0644);
 	
 	if (count($logs)) {
-		@usort($logs, create_function('$a,$b', 'return filemtime($a) - filemtime($b);'));
+		@usort($logs, create_function('$a,$b', 'return filemtime($b) - filemtime($a);'));
 	} 
 	
-	$logname  = basename($logs[0]);
+	if (isset($_GET['logname'])) {
+		$logname = trim($_GET['logname']);
+		
+		//prevent escaping the folder
+		$validFiles = array_map('basename',$logs);
+		if (validate_file($logname, $validFiles)>0) {
+			//Invalid filename provided, don't use it
+			unset($logname);
+		}
+		//done with validFiles
+		unset($validFiles);
+	}
+	
+	if (!isset($logname) || !$logname) {
+		$logname  = basename($logs[0]);
+	}
+	
 	$logpath  = DUPLICATOR_SSDIR_PATH . '/' . $logname;
 	$logfound = (strlen($logname) > 0) ? true :false;
 	
-	$handle   = fopen($logpath , "c+");	
+	$handle   = @fopen($logpath , "c+");	
 	$file     = ($handle) ? fread($handle, filesize($logpath)) : "";
 	@fclose($handle);
 	
@@ -35,7 +51,7 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 	<meta name="robots" content="noindex,nofollow">
 	<link rel="stylesheet" href="<?php echo $admin_url; ?>/load-styles.php?c=0&amp;dir=ltr&amp;load=admin-bar,wp-jquery-ui-dialog,wp-admin&amp;ver=63e8d12bee407fb9bdf078f542ef8b29" type="text/css" media="all">
-	<link rel="stylesheet" id="duplicator_style-css" href="<?php echo $plugins_url; ?>/duplicator/css/style.css?ver=3.3.2" type="text/css" media="all">
+	<link rel="stylesheet" id="duplicator_style-css" href="<?php echo $plugins_url; ?>/duplicator/assets/css/style.css?ver=3.3.2" type="text/css" media="all">
 </head>
 <body>
 
