@@ -257,13 +257,13 @@ if ( ! class_exists( 'bwps_admin_process' ) ) {
 					} else {
 								
 						//query main user table
-						$wpdb->query( "UPDATE `" . $wpdb->users . "` SET user_login = '" . $wpdb->escape( $newuser ) . "' WHERE user_login='admin';" );
+						$wpdb->query( "UPDATE `" . $wpdb->users . "` SET user_login = '" . esc_sql( $newuser ) . "' WHERE user_login='admin';" );
 						
 						if ( is_multisite() ) { //process sitemeta if we're in a multi-site situation
 						
 							$oldAdmins = $wpdb->get_var( "SELECT meta_value FROM `" . $wpdb->sitemeta . "` WHERE meta_key = 'site_admins'" );
-							$newAdmins = str_replace( '5:"admin"', strlen( $newuser ) . ':"' . $wpdb->escape( $newuser ) . '"', $oldAdmins );
-							$wpdb->query( "UPDATE `" . $wpdb->sitemeta . "` SET meta_value = '" . $wpdb->escape( $newAdmins ) . "' WHERE meta_key = 'site_admins'" );
+							$newAdmins = str_replace( '5:"admin"', strlen( $newuser ) . ':"' . esc_sql( $newuser ) . '"', $oldAdmins );
+							$wpdb->query( "UPDATE `" . $wpdb->sitemeta . "` SET meta_value = '" . esc_sql( $newAdmins ) . "' WHERE meta_key = 'site_admins'" );
 							
 						}
 						
@@ -829,7 +829,7 @@ if ( ! class_exists( 'bwps_admin_process' ) ) {
 				//complete with underscore
 				$newPrefix .= '_';
 				
-				$newPrefix = $wpdb->escape( $newPrefix ); //just be safe
+				$newPrefix = esc_sql( $newPrefix ); //just be safe
 				
 				$checkPrefix = $wpdb->get_results( 'SHOW TABLES LIKE "' . $newPrefix . '%";', ARRAY_N ); //if there are no tables with that prefix in the database set checkPrefix to false
 					
@@ -1517,7 +1517,8 @@ if ( ! class_exists( 'bwps_admin_process' ) ) {
 			$bwpsoptions['st_ht_files'] = ( isset( $_POST['st_ht_files'] ) && $_POST['st_ht_files'] == 1  ? 1 : 0 );
 			$bwpsoptions['st_ht_request'] = ( isset( $_POST['st_ht_request'] ) && $_POST['st_ht_request'] == 1  ? 1 : 0 );
 			$bwpsoptions['st_ht_query'] = ( isset( $_POST['st_ht_query'] ) && $_POST['st_ht_query'] == 1  ? 1 : 0 );
-						
+			$bwpsoptions['st_ht_foreign'] = ( isset( $_POST['st_ht_foreign'] ) && $_POST['st_ht_foreign'] == 1  ? 1 : 0 );
+
 			//always set directory browsing to 1 on nginx to prevent nag
 			if ( strstr( strtolower( filter_var( $_SERVER['SERVER_SOFTWARE'], FILTER_SANITIZE_STRING ) ), 'apache' ) ) {
 				$bwpsoptions['st_ht_browsing'] = ( isset( $_POST['st_ht_browsing'] ) && $_POST['st_ht_browsing'] == 1  ? 1 : 0 );
