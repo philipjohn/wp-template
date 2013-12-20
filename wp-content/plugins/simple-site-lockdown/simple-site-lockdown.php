@@ -3,15 +3,15 @@
 Plugin Name: Simple Site Lockdown
 Plugin URI: http://philipjohn.co.uk/category/plugins/simple-site-lockdown/
 Description: Provides a really simple mechanism for locking down a site so that it's private to all but logged in admin users.
-Version: 1.1
+Version: 1.1.1
 Author: Philip John
 Author URI: http://philipjohn.co.uk
 License: WTFPL
+Text Domain: simple-site-lockdown
 */
 
 // Initial sanity check
-if (! defined('ABSPATH'))
-	die('Please do not directly access this file');
+defined('ABSPATH') or die('Please do not directly access this file');
 
 /*
  * Localise the plugin
